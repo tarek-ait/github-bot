@@ -1,21 +1,52 @@
 // boost your github account
-const jsonfile = require("jsonfile");
-const moment = require("moment");
-const simpleGit = require("simple-git");
+import jsonfile from "jsonfile";
+import moment from "moment";
+import simpleGit from "simple-git";
+import randomInt from "random-int";
+
 // the path for our json file
 const file = "data.json";
 
-// getting a date
-const date = moment().format();
+const makeCommit = (n) => {
+  if (n === 0) {
+    simpleGit().push(["--set-upstream", "origin", "main"], (err, result) => {
+      if (err) {
+        console.error("Push failed:", err);
+      } else {
+        console.log("Push successful:", result);
+      }
+    });
+    return;
+  }
+  const x = randomInt(0, 54);
+  const y = randomInt(0, 6);
+  // getting the starting date that you want
+  const date = moment()
+    .subtract(1, "y")
+    .add(1, "d")
+    .add(x, "w")
+    .add(y, "d")
+    .format();
 
-const data = {
-  date: date,
+  const data = {
+    date: date,
+  };
+
+  console.log(data);
+  // writing our data to the json file
+  jsonfile.writeFile(file, data, () => {
+    // commiting the changes to github and modifying the date
+    simpleGit()
+      .add([file])
+      .commit(date, { "--date": date }, (err) => {
+        if (err) {
+          console.error("Commit failed:", err);
+          return;
+        }
+        console.log("Committed");
+        makeCommit(n - 1);
+      });
+  });
 };
 
-// writing our data to the json file
-jsonfile.writeFile(file, data);
-
-// commiting the changes to github and modifying the date
-simpleGit()
-  .add([file])
-  .commit(date, { "--date": date }, () => console.log("committed"));
+makeCommit(10);
